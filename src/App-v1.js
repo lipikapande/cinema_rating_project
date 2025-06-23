@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const tempMovieData = [
   {
@@ -63,7 +63,9 @@ function Logo() {
   );
 }
 
-function Search({ query, setQuery }) {
+function Search() {
+  const [query, setQuery] = useState("");
+
   return (
     <input
       className="search"
@@ -100,19 +102,19 @@ function Box({ children }) {
   );
 }
 
-function MovieList({ movies, onSelectMovie }) {
+function MovieList({ movies }) {
   return (
     <ul className="list">
       {movies?.map((movie) => (
-        <Movie movie={movie} onSelectMovie={onSelectMovie} />
+        <Movie movie={movie} />
       ))}
     </ul>
   );
 }
 
-function Movie({ movie, onSelectMovie }) {
+function Movie({ movie }) {
   return (
-    <li onClick={onSelectMovie} key={movie.imdbID}>
+    <li key={movie.imdbID}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
@@ -123,10 +125,6 @@ function Movie({ movie, onSelectMovie }) {
       </div>
     </li>
   );
-}
-
-function MovieDetails({ selectedId }) {
-  return <div className="details">{selectedId}</div>;
 }
 
 function WatchedSummary({ watched }) {
@@ -192,86 +190,28 @@ function WatchedMovie({ movie }) {
   );
 }
 
-function Loader() {
-  return <p className="loader">Loading...</p>;
-}
-
-function ErrorMessage({ message }) {
-  return <p className="error">{message}</p>;
-}
-
-const key = "ddb53958";
-
 export default function App() {
-  const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [selectedId, setSelectedId] = useState(null);
-
-  function handleSelectMovie(id) {
-    setSelectedId(id);
-  }
-
-  useEffect(
-    function () {
-      async function fetchMovies() {
-        try {
-          setIsLoading(true);
-          setError("");
-          const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${key}&s=${query}`
-          );
-          if (!res.ok)
-            throw new Error("Something went wrong with fetching movies!");
-
-          const data = await res.json();
-          if (data.Response === "False") throw new Error("Movie not found!");
-          setMovies(data.Search);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-
-      if (query.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-      fetchMovies();
-    },
-    [query]
-  );
+  const [movies, setMovies] = useState(tempMovieData);
+  const [watched, setWatched] = useState(tempWatchedData);
 
   return (
     <>
       <NavBar>
         <Logo />
-        <Search query={query} setQuery={setQuery} />
+        <Search />
         <NumResults movies={movies} />
       </NavBar>
       <Main>
         <Box>
-          {isLoading && <Loader />}
-          {!isLoading && !error && (
-            <MovieList movies={movies} onSelectMovie={handleSelectMovie} />
-          )}
-          {error && <ErrorMessage message={error} />}
+          <MovieList movies={movies} />
         </Box>
         {/* <WatchedBox /> */}
         <Box>
           (
-          {selectedId ? (
-            <MovieDetails selectedId={selectedId} />
-          ) : (
-            <>
-              <WatchedSummary watched={watched} />
-              <WatchedMovieList watched={watched} />
-            </>
-          )}
+          <>
+            <WatchedSummary watched={watched} />
+            <WatchedMovieList watched={watched} />
+          </>
           )
         </Box>
       </Main>
